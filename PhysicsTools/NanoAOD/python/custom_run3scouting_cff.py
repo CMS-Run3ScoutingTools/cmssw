@@ -97,16 +97,17 @@ def prepareScoutingNanoTaskCommon():
     # Scouting original objects
     # all scouting objects are saved except PF Candidate and Track
     scoutingNanoTaskCommon = cms.Task()
-    scoutingNanoTaskCommon.add(scoutingMuonTableTask, scoutingMuonDisplacedVertexTableTask)
+    # scoutingNanoTaskCommon.add(scoutingMuonTableTask, scoutingMuonDisplacedVertexTableTask)
     scoutingNanoTaskCommon.add(scoutingElectronTableTask)
     scoutingNanoTaskCommon.add(scoutingPhotonTable)
-    scoutingNanoTaskCommon.add(scoutingPrimaryVertexTable)
-    scoutingNanoTaskCommon.add(scoutingPFJetTable)
-    scoutingNanoTaskCommon.add(scoutingMETTable, scoutingRhoTable)
+    # scoutingNanoTaskCommon.add(scoutingPrimaryVertexTable)
+    # scoutingNanoTaskCommon.add(scoutingPFJetTable)
+    # scoutingNanoTaskCommon.add(scoutingMETTable, scoutingRhoTable)
+    scoutingNanoTaskCommon.add(scoutingRhoTable)
     
     # Scouting derived objects
-    scoutingNanoTaskCommon.add(scoutingPFJetReclusterTask)
-    scoutingNanoTaskCommon.add(scoutingFatPFJetReclusterTask)
+    # scoutingNanoTaskCommon.add(scoutingPFJetReclusterTask)
+    # scoutingNanoTaskCommon.add(scoutingFatPFJetReclusterTask)
 
     return scoutingNanoTaskCommon
 
@@ -119,8 +120,8 @@ def prepareScoutingTriggerTask():
 # additional tasks for running on MC
 def prepareScoutingNanoTaskMC():
     scoutingNanoTaskMC = cms.Task()
-    scoutingNanoTaskMC.add(scoutingPFJetReclusterMatchGenExtensionTask)
-    scoutingNanoTaskMC.add(scoutingFatPFJetReclusterMatchGenExtensionTask)
+    # scoutingNanoTaskMC.add(scoutingPFJetReclusterMatchGenExtensionTask)
+    # scoutingNanoTaskMC.add(scoutingFatPFJetReclusterMatchGenExtensionTask)
 
     scoutingNanoTaskMC.add(puTable)
     return scoutingNanoTaskMC
