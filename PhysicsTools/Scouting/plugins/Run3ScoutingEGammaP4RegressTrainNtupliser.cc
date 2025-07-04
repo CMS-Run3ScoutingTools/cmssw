@@ -75,6 +75,9 @@ private:
   int foundGoodTrack_, trkq_;
   float trkpt_, trketa_, trkphi_, trkd0_, trkdz_, trkpMode_, trketaMode_, trkphiMode_, trkqoverpModeError_,
       trkchi2overndf_;
+  int trkvecn_;
+  std::vector<float> trkvecpt_, trkveceta_, trkvecphi_, trkvecpmode_, trkvecetamode_, trkvecphimode_, trkvecd0_,
+      trkvecdz_, trkvecqoverpmodeerror_, trkvecchi2overndf_;
 
 public:
   struct ShowerStruct {
@@ -204,6 +207,18 @@ void Run3ScoutingEGammaP4RegressTrainNtupliser::beginJob() {
   tree_->Branch("trkphiMode", &trkphiMode_, "trkphiMode/F");
   tree_->Branch("trkqoverpModeError", &trkqoverpModeError_, "trkqoverpModeError/F");
   tree_->Branch("trkchi2overndf", &trkchi2overndf_, "trkchi2overndf/F");
+
+  tree_->Branch("trkvecn", &trkvecn_, "trkvec/I");
+  tree_->Branch("trkvecpt", &trkvecpt_);
+  tree_->Branch("trkveceta", &trkveceta_);
+  tree_->Branch("trkvecphi", &trkvecphi_);
+  tree_->Branch("trkvecpmode", &trkvecpmode_);
+  tree_->Branch("trkvecetamode", &trkvecetamode_);
+  tree_->Branch("trkvecphimode", &trkvecphimode_);
+  tree_->Branch("trkvecd0", &trkvecd0_);
+  tree_->Branch("trkvecdz", &trkvecdz_);
+  tree_->Branch("trkvecqoverpmodeerror", &trkvecqoverpmodeerror_);
+  tree_->Branch("trkvecchi2overndf", &trkvecchi2overndf_);
 }
 
 void Run3ScoutingEGammaP4RegressTrainNtupliser::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) {
@@ -318,7 +333,29 @@ void Run3ScoutingEGammaP4RegressTrainNtupliser::analyze(const edm::Event& iEvent
       trkchi2overndf_ = -5.0f;
     }
 
+    trkvecpt_ = ele.trkpt();
+    trkveceta_ = ele.trketa();
+    trkvecphi_ = ele.trkphi();
+    trkvecpmode_ = ele.trkpMode();
+    trkvecetamode_ = ele.trketaMode();
+    trkvecphimode_ = ele.trkphiMode();
+    trkvecd0_ = ele.trkd0();
+    trkvecdz_ = ele.trkdz();
+    trkvecqoverpmodeerror_ = ele.trkqoverpModeError();
+    trkvecchi2overndf_ = ele.trkchi2overndf();
+    trkvecn_ = trkvecpt_.size();
+
     tree_->Fill();
+    trkvecpt_.clear();
+    trkveceta_.clear();
+    trkvecphi_.clear();
+    trkvecpmode_.clear();
+    trkvecetamode_.clear();
+    trkvecphimode_.clear();
+    trkvecd0_.clear();
+    trkvecdz_.clear();
+    trkvecqoverpmodeerror_.clear();
+    trkvecchi2overndf_.clear();
   }
 }
 
