@@ -10,6 +10,6 @@
 
 <use name="PhysicsTools/PatAlgos"/>
 
-<library file="*.cc" name="PhysicsToolsScoutingPlugins" >
-  <flags EDM_PLUGIN="1"/>
-</library>
+<export>
+  <lib name="1"/>
+</export>

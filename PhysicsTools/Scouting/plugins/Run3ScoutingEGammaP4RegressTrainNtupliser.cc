@@ -24,31 +24,24 @@
 #include "FWCore/ServiceRegistry/interface/Service.h"
 
 #include "DataFormats/Common/interface/ValueMap.h"
-#include "DataFormats/DetId/interface/DetId.h"
-#include "DataFormats/EcalDetId/interface/EBDetId.h"
-#include "DataFormats/EcalDetId/interface/EEDetId.h"
 #include "DataFormats/HepMCCandidate/interface/GenParticle.h"
 #include "DataFormats/Math/interface/LorentzVector.h"
 #include "DataFormats/Math/interface/deltaR.h"
 #include "DataFormats/Scouting/interface/Run3ScoutingElectron.h"
 
+#include "PhysicsTools/Scouting/interface/Run3ScoutingEGammaMakeShowerStruct.h"
+
 #include "CommonTools/UtilAlgos/interface/TFileService.h"
 #include "TTree.h"
-
-#include <tuple>
 
 class Run3ScoutingEGammaP4RegressTrainNtupliser : public edm::one::EDAnalyzer<edm::one::SharedResources> {
 public:
   explicit Run3ScoutingEGammaP4RegressTrainNtupliser(const edm::ParameterSet&);
   ~Run3ScoutingEGammaP4RegressTrainNtupliser() override;
 
-  std::tuple<int, int> getiEtaiPhiFromSeedId(uint32_t, int&);
-
 private:
   void beginJob() override;
   void analyze(const edm::Event&, const edm::EventSetup&) override;
-  DetId getOffsetId(const DetId&, int, int);
-  float getHitEnergy(const DetId&, const std::unordered_map<int, float>&);
 
   edm::EDGetTokenT<std::vector<Run3ScoutingElectron>> electronToken_;
   edm::EDGetTokenT<edm::ValueMap<int>> run3SctEle_bestTrkToken_;
@@ -68,8 +61,6 @@ private:
   float eMax_, e2nd_, eL_, eR_, eT_, eB_;
   float e1x5_, e5x5_, e2x5M_, e2x5L_, e2x5R_, e2x5T_, e2x5B_;
 
-  static constexpr unsigned int ecal2dwindow_idxoffset = 2;
-  static constexpr unsigned int ecal2dwindow = (2 * (ecal2dwindow_idxoffset) + 1) * (2 * (ecal2dwindow_idxoffset) + 1);
   std::array<float, ecal2dwindow> c_edep_;
 
   int foundGoodTrack_, trkq_;
@@ -78,56 +69,6 @@ private:
   int trkvecn_;
   std::vector<float> trkvecpt_, trkveceta_, trkvecphi_, trkvecpmode_, trkvecetamode_, trkvecphimode_, trkvecd0_,
       trkvecdz_, trkvecqoverpmodeerror_, trkvecchi2overndf_;
-
-public:
-  struct ShowerStruct {
-    // M - Max, L - Left, R - Right, T - Top, B - Bottom
-    float eMax;
-    float e2nd;
-    float eL;
-    float eR;
-    float eT;
-    float eB;
-    float e1x5;
-    float e5x5;
-    float e2x5M;
-    float e2x5L;
-    float e2x5R;
-    float e2x5T;
-    float e2x5B;
-
-    ShowerStruct(float eMax_v,
-                 float e2nd_v,
-                 float eL_v,
-                 float eR_v,
-                 float eT_v,
-                 float eB_v,
-                 float e1x5_v,
-                 float e5x5_v,
-                 float e2x5M_v,
-                 float e2x5L_v,
-                 float e2x5R_v,
-                 float e2x5T_v,
-                 float e2x5B_v)
-        : eMax(eMax_v),
-          e2nd(e2nd_v),
-          eL(eL_v),
-          eR(eR_v),
-          eT(eT_v),
-          eB(eB_v),
-          e1x5(e1x5_v),
-          e5x5(e5x5_v),
-          e2x5M(e2x5M_v),
-          e2x5L(e2x5L_v),
-          e2x5R(e2x5R_v),
-          e2x5T(e2x5T_v),
-          e2x5B(e2x5B_v) {}
-  };
-
-  ShowerStruct makeShowerStruct(const uint32_t,
-                                const std::vector<uint32_t>&,
-                                const std::vector<float>&,
-                                std::array<float, ecal2dwindow>&);
 };
 
 Run3ScoutingEGammaP4RegressTrainNtupliser::Run3ScoutingEGammaP4RegressTrainNtupliser(const edm::ParameterSet& iConfig)
@@ -282,13 +223,13 @@ void Run3ScoutingEGammaP4RegressTrainNtupliser::analyze(const edm::Event& iEvent
     fbrem_ = ele.trackfbrem();
 
     int iseb = 0;
-    std::tuple<int, int> detangs = getiEtaiPhiFromSeedId(ele.seedId(), iseb);
+    std::tuple<int, int> detangs = Run3ScoutingEGammaMakeShowerStruct::getiEtaiPhiFromSeedId(ele.seedId(), iseb);
     ieta_ = std::get<0>(detangs);
     iphi_ = std::get<1>(detangs);
     iseb_ = iseb;
 
     c_edep_.fill(0.f);
-    ShowerStruct ss = makeShowerStruct(ele.seedId(), ele.detIds(), ele.energyMatrix(), c_edep_);
+    ShowerStruct ss = Run3ScoutingEGammaMakeShowerStruct::makeShowerStruct(ele.seedId(), ele.detIds(), ele.energyMatrix(), c_edep_);
     eMax_ = ss.eMax;
     e2nd_ = ss.e2nd;
     eL_ = ss.eL;
@@ -359,96 +300,6 @@ void Run3ScoutingEGammaP4RegressTrainNtupliser::analyze(const edm::Event& iEvent
   }
 }
 
-std::tuple<int, int> Run3ScoutingEGammaP4RegressTrainNtupliser::getiEtaiPhiFromSeedId(uint32_t seedid, int& isEB) {
-  int iEtaOrIX = -1, iPhiOrIY = -1;
-  DetId eleSeedId(seedid);
-  if (eleSeedId.det() == DetId::Ecal) {
-    if (eleSeedId.subdetId() == EcalBarrel) {
-      EBDetId ebId(eleSeedId);
-      iEtaOrIX = ebId.ieta();
-      iPhiOrIY = ebId.iphi();
-      isEB = 1;
-    } else if (eleSeedId.subdetId() == EcalEndcap) {
-      EEDetId eeId(eleSeedId);
-      iEtaOrIX = eeId.ix();
-      iPhiOrIY = eeId.iy();
-      isEB = 0;
-    }
-  }
-
-  return std::make_tuple(iEtaOrIX, iPhiOrIY);
-}
-
-DetId Run3ScoutingEGammaP4RegressTrainNtupliser::getOffsetId(const DetId& seedId, int iEtaOrIX, int iPhiOrIY) {
-  if (seedId.det() == DetId::Ecal && seedId.subdetId() == EcalBarrel) {
-    EBDetId ebId(seedId);
-    return ebId.offsetBy(iEtaOrIX, iPhiOrIY);
-  } else if (seedId.det() == DetId::Ecal && seedId.subdetId() == EcalEndcap) {
-    EEDetId eeId(seedId);
-    return eeId.offsetBy(iEtaOrIX, iPhiOrIY);
-  } else {
-    return DetId(0);
-  }
-}
-
-float Run3ScoutingEGammaP4RegressTrainNtupliser::getHitEnergy(const DetId& id,
-                                                              const std::unordered_map<int, float>& detIdToEnergy) {
-  auto entry = detIdToEnergy.find(id.rawId());
-  if (entry != detIdToEnergy.end()) {
-    return entry->second;
-  } else {
-    return 0.f;
-  }
-}
-
-Run3ScoutingEGammaP4RegressTrainNtupliser::ShowerStruct Run3ScoutingEGammaP4RegressTrainNtupliser::makeShowerStruct(
-    const uint32_t seedId,
-    const std::vector<uint32_t>& detIds,
-    const std::vector<float>& eneM,
-    std::array<float, ecal2dwindow>& c_edep) {
-  float eMax = 0.0f, e2nd = 0.0, eL = 0.0f, eR = 0.0f, eT = 0.0f, eB = 0.0f, e1x5 = 0.0f, e5x5 = 0.0f, e2x5M = 0.0f,
-        e2x5L = 0.0f, e2x5R = 0.0f, e2x5T = 0.0f, e2x5B = 0.0f;
-  std::unordered_map<int, float> detIdToEnergy;
-  for (size_t index = 0; index < detIds.size(); index++) {
-    detIdToEnergy[detIds[index]] = eneM[index];
-  }
-  constexpr int arrayOffset = ecal2dwindow_idxoffset;
-  std::array<float, 5> iEtaOrIXStrips;
-  std::array<float, 5> iPhiOrIYStrips;
-  iEtaOrIXStrips.fill(0.f);
-  iPhiOrIYStrips.fill(0.f);
-  for (int iEtaOrIXNr = -arrayOffset; iEtaOrIXNr <= arrayOffset; iEtaOrIXNr++) {
-    for (int iPhiOrIYNr = -arrayOffset; iPhiOrIYNr <= arrayOffset; iPhiOrIYNr++) {
-      const DetId& id = getOffsetId(seedId, iEtaOrIXNr, iPhiOrIYNr);
-      float energy = getHitEnergy(id, detIdToEnergy);
-      if (energy > eMax) {
-        e2nd = eMax;
-        eMax = energy;
-      } else if (energy > e2nd) {
-        e2nd = energy;
-      }
-      e5x5 += energy;
-      iEtaOrIXStrips[iEtaOrIXNr + arrayOffset] += energy;
-      iPhiOrIYStrips[iPhiOrIYNr + arrayOffset] += energy;
-      unsigned int edep_pos = ((iEtaOrIXNr + arrayOffset) * ((2 * arrayOffset) + 1)) + (iPhiOrIYNr + arrayOffset);
-      c_edep[edep_pos] = energy;
-    }
-  }
-  eL = getHitEnergy(getOffsetId(seedId, -1, 0), detIdToEnergy);
-  eR = getHitEnergy(getOffsetId(seedId, 1, 0), detIdToEnergy);
-  eT = getHitEnergy(getOffsetId(seedId, 0, 1), detIdToEnergy);
-  eB = getHitEnergy(getOffsetId(seedId, 0, -1), detIdToEnergy);
-
-  e2x5L = iEtaOrIXStrips[-2 + arrayOffset] + iEtaOrIXStrips[-1 + arrayOffset];
-  e2x5R = iEtaOrIXStrips[1 + arrayOffset] + iEtaOrIXStrips[2 + arrayOffset];
-  e1x5 = iEtaOrIXStrips[0 + arrayOffset];
-  e2x5T = iPhiOrIYStrips[1 + arrayOffset] + iPhiOrIYStrips[2 + arrayOffset];
-  e2x5B = iPhiOrIYStrips[-2 + arrayOffset] + iPhiOrIYStrips[-1 + arrayOffset];
-  e2x5M = std::max(iEtaOrIXStrips[-1 + arrayOffset], iEtaOrIXStrips[1 + arrayOffset]) + iEtaOrIXStrips[0 + arrayOffset];
-
-  return Run3ScoutingEGammaP4RegressTrainNtupliser::ShowerStruct(
-      eMax, e2nd, eL, eR, eT, eB, e1x5, e5x5, e2x5M, e2x5L, e2x5R, e2x5T, e2x5B);
-}
 
 // Define this as a plugin
 DEFINE_FWK_MODULE(Run3ScoutingEGammaP4RegressTrainNtupliser);
