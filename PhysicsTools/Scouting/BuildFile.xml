@@ -1,14 +1,5 @@
-<use name="fastjet"/>
-<use name="fastjet-contrib"/>
-
-<use name="FWCore/Framework"/>
-<use name="FWCore/ParameterSet"/>
-<use name="FWCore/PluginManager"/>
-
-<use name="DataFormats/Math"/>
-<use name="DataFormats/Scouting"/>
-
-<use name="PhysicsTools/PatAlgos"/>
+<use name="DataFormats/DetId"/>
+<use name="DataFormats/EcalDetId"/>
 
 <export>
   <lib name="1"/>

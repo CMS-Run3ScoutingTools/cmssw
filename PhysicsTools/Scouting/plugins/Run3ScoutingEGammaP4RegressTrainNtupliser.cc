@@ -34,6 +34,8 @@
 #include "CommonTools/UtilAlgos/interface/TFileService.h"
 #include "TTree.h"
 
+#include <array>
+
 class Run3ScoutingEGammaP4RegressTrainNtupliser : public edm::one::EDAnalyzer<edm::one::SharedResources> {
 public:
   explicit Run3ScoutingEGammaP4RegressTrainNtupliser(const edm::ParameterSet&);
@@ -61,7 +63,8 @@ private:
   float eMax_, e2nd_, eL_, eR_, eT_, eB_;
   float e1x5_, e5x5_, e2x5M_, e2x5L_, e2x5R_, e2x5T_, e2x5B_;
 
-  std::array<float, ecal2dwindow> c_edep_;
+  static constexpr unsigned int ecal2dwindow_ = Run3ScoutingEGammaMakeShowerStruct::ecal2dwindow;
+  std::array<float, ecal2dwindow_> c_edep_;
 
   int foundGoodTrack_, trkq_;
   float trkpt_, trketa_, trkphi_, trkd0_, trkdz_, trkpMode_, trketaMode_, trkphiMode_, trkqoverpModeError_,
@@ -229,7 +232,8 @@ void Run3ScoutingEGammaP4RegressTrainNtupliser::analyze(const edm::Event& iEvent
     iseb_ = iseb;
 
     c_edep_.fill(0.f);
-    ShowerStruct ss = Run3ScoutingEGammaMakeShowerStruct::makeShowerStruct(ele.seedId(), ele.detIds(), ele.energyMatrix(), c_edep_);
+    Run3ScoutingEGammaMakeShowerStruct::ShowerStruct ss =
+        Run3ScoutingEGammaMakeShowerStruct::makeShowerStruct(ele.seedId(), ele.detIds(), ele.energyMatrix(), c_edep_);
     eMax_ = ss.eMax;
     e2nd_ = ss.e2nd;
     eL_ = ss.eL;
@@ -299,7 +303,6 @@ void Run3ScoutingEGammaP4RegressTrainNtupliser::analyze(const edm::Event& iEvent
     trkvecchi2overndf_.clear();
   }
 }
-
 
 // Define this as a plugin
 DEFINE_FWK_MODULE(Run3ScoutingEGammaP4RegressTrainNtupliser);

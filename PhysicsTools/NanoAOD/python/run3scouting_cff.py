@@ -310,6 +310,41 @@ run3_scouting_nanoAOD_2024.toModify(
     nCrystals = Var("nCrystals", "uint", precision=10, doc="number of crystals"),
 )
 
+# Scouting EG Regression Variable Producer
+scoutingElectronRegressVarTable = cms.EDProducer("Run3ScoutingEGammaP4RegressVarProducer",
+    Run3ScoutingElectron = cms.InputTag("hltScoutingEgammaPacker"),
+)
+run3_scouting_nanoAOD_2024.toModify(
+    scoutingElectronTable.externalVariables,
+    iEtaOriX = ExtVar(cms.InputTag("scoutingElectronRegressVarTable", "iEtaOriX"), int, doc="seed crystal iEta or iX"),
+    iPhiOriY = ExtVar(cms.InputTag("scoutingElectronRegressVarTable", "iPhiOriY"), int, doc="seed crystal iPhi or iY"),
+    isEB = ExtVar(cms.InputTag("scoutingElectronRegressVarTable", "isEB"), int, doc="is seed crystal EB"),
+    showerEMax = ExtVar(cms.InputTag("scoutingElectronRegressVarTable", "showerEMax"), float, doc="eMax of the shower shape"),
+    showerE2ndMax = ExtVar(cms.InputTag("scoutingElectronRegressVarTable", "showerE2ndMax"), float, doc="second eMax of the shower shape"),
+    showerELeft = ExtVar(cms.InputTag("scoutingElectronRegressVarTable", "showerELeft"), float, doc="e left of the shower shape"),
+    showerERight = ExtVar(cms.InputTag("scoutingElectronRegressVarTable", "showerERight"), float, doc="e right of the shower shape"),
+    showerETop = ExtVar(cms.InputTag("scoutingElectronRegressVarTable", "showerETop"), float, doc="e top of the shower shape"),
+    showerEBottom = ExtVar(cms.InputTag("scoutingElectronRegressVarTable", "showerEBottom"), float, doc="e bottom of the shower shape"),
+    showerE1x5 = ExtVar(cms.InputTag("scoutingElectronRegressVarTable", "showerE1x5"), float, doc="e 1x5 of the shower shape"),
+    showerE5x5 = ExtVar(cms.InputTag("scoutingElectronRegressVarTable", "showerE5x5"), float, doc="e 5x5 of the shower shape"),
+    showerE2x5Max = ExtVar(cms.InputTag("scoutingElectronRegressVarTable", "showerE2x5Max"), float, doc="emax 2x5 of the shower shape"),
+    showerE2x5Left = ExtVar(cms.InputTag("scoutingElectronRegressVarTable", "showerE2x5Left"), float, doc="eleft 2x5 of the shower shape"),
+    showerE2x5Right = ExtVar(cms.InputTag("scoutingElectronRegressVarTable", "showerE2x5Right"), float, doc="eright 2x5 of the shower shape"),
+    showerE2x5Top = ExtVar(cms.InputTag("scoutingElectronRegressVarTable", "showerE2x5Top"), float, doc="etop 2x5 of the shower shape"),
+    showerE2x5Bottom = ExtVar(cms.InputTag("scoutingElectronRegressVarTable", "showerE2x5Bottom"), float, doc="ebottom 2x5 of the shower shape"),
+    # showerEdep0 = ExtVar(cms.InputTag("scoutingElectronRegressVarTable", "showerEdep0"), float, doc="showerEdep[0]"),
+)
+for i in range(25):
+    setattr(
+        scoutingElectronTable.externalVariables,
+        f"showerEdep{i}",
+        ExtVar(
+            cms.InputTag("scoutingElectronRegressVarTable", f"showerEdep{i}"),
+            float,
+            doc=f"showerEdep[{i}]"
+        )
+    )
+
 # Scouting Track
 # https://github.com/cms-sw/cmssw/blob/CMSSW_14_0_X/DataFormats/Scouting/interface/Run3ScoutingTrack.h
 

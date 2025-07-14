@@ -1,3 +1,17 @@
+// -*- C++ -*-
+//
+// Package:    PhysicsTools/Scouting
+// Class:      Run3ScoutingEGammaMakeShowerStruct
+//
+/**
+ Description: Create shower shape variables for Run3 scouting EG regression
+*/
+//
+// Original Author:  Abanti Ranadhir Sahasransu
+//         Created:  Fri, 07 July 2025 07:07:25 GMT
+//
+//
+
 #include "PhysicsTools/Scouting/interface/Run3ScoutingEGammaMakeShowerStruct.h"
 
 std::tuple<int, int> Run3ScoutingEGammaMakeShowerStruct::getiEtaiPhiFromSeedId(uint32_t seedid, int& isEB) {
@@ -20,7 +34,6 @@ std::tuple<int, int> Run3ScoutingEGammaMakeShowerStruct::getiEtaiPhiFromSeedId(u
   return std::make_tuple(iEtaOrIX, iPhiOrIY);
 }
 
-
 DetId Run3ScoutingEGammaMakeShowerStruct::getOffsetId(const DetId& seedId, int iEtaOrIX, int iPhiOrIY) {
   if (seedId.det() == DetId::Ecal && seedId.subdetId() == EcalBarrel) {
     EBDetId ebId(seedId);
@@ -33,9 +46,8 @@ DetId Run3ScoutingEGammaMakeShowerStruct::getOffsetId(const DetId& seedId, int i
   }
 }
 
-
 float Run3ScoutingEGammaMakeShowerStruct::getHitEnergy(const DetId& id,
-                                                              const std::unordered_map<int, float>& detIdToEnergy) {
+                                                       const std::unordered_map<int, float>& detIdToEnergy) {
   auto entry = detIdToEnergy.find(id.rawId());
   if (entry != detIdToEnergy.end()) {
     return entry->second;
@@ -43,7 +55,6 @@ float Run3ScoutingEGammaMakeShowerStruct::getHitEnergy(const DetId& id,
     return 0.f;
   }
 }
-
 
 Run3ScoutingEGammaMakeShowerStruct::ShowerStruct Run3ScoutingEGammaMakeShowerStruct::makeShowerStruct(
     const uint32_t seedId,

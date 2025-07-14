@@ -15,35 +15,24 @@
 //
 
 // system include files
-// #include <limits>
-// #include <memory>
-// #include <vector>
+#include <sstream>
 
 // user include files
-// #include "FWCore/Framework/interface/Frameworkfwd.h"
-// #include "FWCore/Framework/interface/stream/EDProducer.h"
-// #include "FWCore/Framework/interface/Event.h"
-// #include "FWCore/Framework/interface/MakerMacros.h"
-// #include "FWCore/ParameterSet/interface/ParameterSet.h"
-// #include "FWCore/Utilities/interface/Exception.h"
-// #include "FWCore/Utilities/interface/InputTag.h"
+#include "FWCore/Framework/interface/Frameworkfwd.h"
+#include "FWCore/Framework/interface/stream/EDProducer.h"
+#include "FWCore/Framework/interface/Event.h"
+#include "FWCore/Framework/interface/MakerMacros.h"
+#include "FWCore/ParameterSet/interface/ParameterSet.h"
+#include "FWCore/Utilities/interface/InputTag.h"
 #include "FWCore/Utilities/interface/StreamID.h"
-// #include "FWCore/ServiceRegistry/interface/Service.h"
+#include "FWCore/ServiceRegistry/interface/Service.h"
 
-// #include "DataFormats/Common/interface/ValueMap.h"
-// #include "DataFormats/Common/interface/Wrapper.h"
-// #include "DataFormats/DetId/interface/DetId.h"
-// #include "DataFormats/EcalDetId/interface/EBDetId.h"
-// #include "DataFormats/EcalDetId/interface/EEDetId.h"
-// #include "DataFormats/HepMCCandidate/interface/GenParticle.h"
-// #include "DataFormats/Math/interface/LorentzVector.h"
-// #include "DataFormats/Math/interface/deltaR.h"
+#include "DataFormats/Common/interface/ValueMap.h"
 #include "DataFormats/Scouting/interface/Run3ScoutingElectron.h"
 
 #include "PhysicsTools/Scouting/interface/Run3ScoutingEGammaMakeShowerStruct.h"
 
 // #include <tuple>
-
 
 //
 // class declaration
@@ -61,7 +50,8 @@ private:
   void putValueMap(edm::Event&, edm::Handle<Run3ScoutingElectronCollection>&, const std::vector<T>&, const std::string&);
 
   const edm::EDGetTokenT<std::vector<Run3ScoutingElectron>> run3ScoutingElectronToken_;
-  edm::EDGetTokenT<edm::ValueMap<int>> run3SctEle_bestTrkToken_;
+
+  static constexpr unsigned int ecal2dwindow_ = Run3ScoutingEGammaMakeShowerStruct::ecal2dwindow;
 };
 
 //
@@ -69,21 +59,28 @@ private:
 //
 Run3ScoutingEGammaP4RegressVarProducer::Run3ScoutingEGammaP4RegressVarProducer(const edm::ParameterSet& iConfig)
     : run3ScoutingElectronToken_(
-          consumes<std::vector<Run3ScoutingElectron>>(iConfig.getParameter<edm::InputTag>("Run3ScoutingElectron"))),
-    run3SctEle_bestTrkToken_(
-          consumes<edm::ValueMap<int>>(iConfig.getParameter<edm::InputTag>("run3ScoutingElectronBestTrk"))) {
-
-  // produces<edm::ValueMap<float>>("Run3ScoutingElectronTrackd0");
-  // produces<edm::ValueMap<float>>("Run3ScoutingElectronTrackdz");
-  // produces<edm::ValueMap<float>>("Run3ScoutingElectronTrackpt");
-  // produces<edm::ValueMap<float>>("Run3ScoutingElectronTracketa");
-  // produces<edm::ValueMap<float>>("Run3ScoutingElectronTrackphi");
-  // produces<edm::ValueMap<float>>("Run3ScoutingElectronTrackpMode");
-  // produces<edm::ValueMap<float>>("Run3ScoutingElectronTracketaMode");
-  // produces<edm::ValueMap<float>>("Run3ScoutingElectronTrackphiMode");
-  // produces<edm::ValueMap<float>>("Run3ScoutingElectronTrackqoverpModeError");
-  // produces<edm::ValueMap<float>>("Run3ScoutingElectronTrackchi2overndf");
-  // produces<edm::ValueMap<int>>("Run3ScoutingElectronTrackcharge");
+          consumes<std::vector<Run3ScoutingElectron>>(iConfig.getParameter<edm::InputTag>("Run3ScoutingElectron"))) {
+  produces<edm::ValueMap<int>>("iEtaOriX");
+  produces<edm::ValueMap<int>>("iPhiOriY");
+  produces<edm::ValueMap<int>>("isEB");
+  produces<edm::ValueMap<float>>("showerEMax");
+  produces<edm::ValueMap<float>>("showerE2ndMax");
+  produces<edm::ValueMap<float>>("showerELeft");
+  produces<edm::ValueMap<float>>("showerERight");
+  produces<edm::ValueMap<float>>("showerETop");
+  produces<edm::ValueMap<float>>("showerEBottom");
+  produces<edm::ValueMap<float>>("showerE1x5");
+  produces<edm::ValueMap<float>>("showerE5x5");
+  produces<edm::ValueMap<float>>("showerE2x5Max");
+  produces<edm::ValueMap<float>>("showerE2x5Left");
+  produces<edm::ValueMap<float>>("showerE2x5Right");
+  produces<edm::ValueMap<float>>("showerE2x5Top");
+  produces<edm::ValueMap<float>>("showerE2x5Bottom");
+  for(unsigned int iCrystal=0; iCrystal<ecal2dwindow_; iCrystal++) {
+    std::stringstream bname;
+    bname<<"showerEdep"<<iCrystal;
+    produces<edm::ValueMap<float>>(bname.str());
+  }
 }
 
 //
@@ -102,95 +99,95 @@ void Run3ScoutingEGammaP4RegressVarProducer::produce(edm::Event& iEvent, const e
     return;
   }
 
-  // const size_t num_electrons = run3ScoutingElectronHandle->size();
-  // std::vector<int> besttrk_idx(num_electrons, -1);
-  // std::vector<float> besttrk_d0s(num_electrons, std::numeric_limits<float>::max());
-  // std::vector<float> besttrk_dzs(num_electrons, std::numeric_limits<float>::max());
-  // std::vector<float> besttrk_pts(num_electrons, std::numeric_limits<float>::max());
-  // std::vector<float> besttrk_etas(num_electrons, std::numeric_limits<float>::max());
-  // std::vector<float> besttrk_phis(num_electrons, std::numeric_limits<float>::max());
-  // std::vector<float> besttrk_pModes(num_electrons, std::numeric_limits<float>::max());
-  // std::vector<float> besttrk_etaModes(num_electrons, std::numeric_limits<float>::max());
-  // std::vector<float> besttrk_phiModes(num_electrons, std::numeric_limits<float>::max());
-  // std::vector<float> besttrk_qoverpModeErrors(num_electrons, std::numeric_limits<float>::max());
-  // std::vector<float> besttrk_chi2overndfs(num_electrons, std::numeric_limits<float>::max());
-  // std::vector<int> besttrk_charges(num_electrons, std::numeric_limits<int>::max());
+  const size_t num_electrons = run3ScoutingElectronHandle->size();
+  std::vector<int> ieta(num_electrons, -1);
+  std::vector<int> iphi(num_electrons, -1);
+  std::vector<int> iseb(num_electrons, -1);
+  std::vector<float> emax(num_electrons, -1.0f);
+  std::vector<float> e2nd(num_electrons, -1.0f);
+  std::vector<float> el(num_electrons, -1.0f);
+  std::vector<float> er(num_electrons, -1.0f);
+  std::vector<float> et(num_electrons, -1.0f);
+  std::vector<float> eb(num_electrons, -1.0f);
+  std::vector<float> e1x5(num_electrons, -1.0f);
+  std::vector<float> e5x5(num_electrons, -1.0f);
+  std::vector<float> e2x5m(num_electrons, -1.0f);
+  std::vector<float> e2x5l(num_electrons, -1.0f);
+  std::vector<float> e2x5r(num_electrons, -1.0f);
+  std::vector<float> e2x5t(num_electrons, -1.0f);
+  std::vector<float> e2x5b(num_electrons, -1.0f);
+  std::vector<std::array<float, ecal2dwindow_>> c_edep_(num_electrons, std::array<float, ecal2dwindow_>{});
 
-  // for (size_t iElectron = 0; iElectron < num_electrons; ++iElectron) {
-  //   const Run3ScoutingElectron& electron = run3ScoutingElectronHandle->at(iElectron);
-  //   const math::PtEtaPhiMLorentzVector cluster(electron.pt(), electron.eta(), electron.phi(), 0.0005);
+  for (size_t iElectron = 0; iElectron < num_electrons; ++iElectron) {
+    const Run3ScoutingElectron& electron = run3ScoutingElectronHandle->at(iElectron);
 
-  //   double besttrack_ediff = std::numeric_limits<double>::max();
+    int iseb_ = 0;
+    std::tuple<int, int> detangs = Run3ScoutingEGammaMakeShowerStruct::getiEtaiPhiFromSeedId(electron.seedId(), iseb_);
+    ieta[iElectron] = std::get<0>(detangs);
+    iphi[iElectron] = std::get<1>(detangs);
+    iseb[iElectron] = iseb_;
 
-  //   for (unsigned int i = 0; i < electron.trkpt().size(); ++i) {
-  //     const unsigned int eta_idx = (std::abs(electron.trketa()[i]) < 1.479) ? 0 : 1;
-  //     if (electron.trkpt()[i] < trackPtMin_[eta_idx])
-  //       continue;
-  //     if (electron.trkchi2overndf()[i] > trackChi2OverNdofMax_[eta_idx])
-  //       continue;
+    c_edep_[iElectron].fill(0.f);
+    Run3ScoutingEGammaMakeShowerStruct::ShowerStruct ss =
+        Run3ScoutingEGammaMakeShowerStruct::makeShowerStruct(electron.seedId(), electron.detIds(), electron.energyMatrix(), c_edep_[iElectron]);
+    emax[iElectron] = ss.eMax;
+    e2nd[iElectron] = ss.e2nd;
+    el[iElectron] = ss.eL;
+    er[iElectron] = ss.eR;
+    et[iElectron] = ss.eT;
+    eb[iElectron] = ss.eB;
+    e1x5[iElectron] = ss.e1x5;
+    e5x5[iElectron] = ss.e5x5;
+    e2x5m[iElectron] = ss.e2x5M;
+    e2x5l[iElectron] = ss.e2x5L;
+    e2x5r[iElectron] = ss.e2x5R;
+    e2x5t[iElectron] = ss.e2x5T;
+    e2x5b[iElectron] = ss.e2x5B;
+  }
 
-  //     const math::PtEtaPhiMLorentzVector gsftrack(
-  //         electron.trkpt()[i], electron.trketa()[i], electron.trkphi()[i], 0.0005);
+  putValueMap<int>(iEvent, run3ScoutingElectronHandle, ieta, "iEtaOriX");
+  putValueMap<int>(iEvent, run3ScoutingElectronHandle, iphi, "iPhiOriY");
+  putValueMap<int>(iEvent, run3ScoutingElectronHandle, iseb, "isEB");
+  putValueMap<float>(iEvent, run3ScoutingElectronHandle, emax, "showerEMax");
+  putValueMap<float>(iEvent, run3ScoutingElectronHandle, e2nd, "showerE2ndMax");
+  putValueMap<float>(iEvent, run3ScoutingElectronHandle, el, "showerELeft");
+  putValueMap<float>(iEvent, run3ScoutingElectronHandle, er, "showerERight");
+  putValueMap<float>(iEvent, run3ScoutingElectronHandle, et, "showerETop");
+  putValueMap<float>(iEvent, run3ScoutingElectronHandle, eb, "showerEBottom");
+  putValueMap<float>(iEvent, run3ScoutingElectronHandle, e1x5, "showerE1x5");
+  putValueMap<float>(iEvent, run3ScoutingElectronHandle, e5x5, "showerE5x5");
+  putValueMap<float>(iEvent, run3ScoutingElectronHandle, e2x5m, "showerE2x5Max");
+  putValueMap<float>(iEvent, run3ScoutingElectronHandle, e2x5l, "showerE2x5Left");
+  putValueMap<float>(iEvent, run3ScoutingElectronHandle, e2x5r, "showerE2x5Right");
+  putValueMap<float>(iEvent, run3ScoutingElectronHandle, e2x5t, "showerE2x5Top");
+  putValueMap<float>(iEvent, run3ScoutingElectronHandle, e2x5b, "showerE2x5Bottom");
+  for(unsigned int iCrystal=0; iCrystal<ecal2dwindow_; iCrystal++) {
+    std::stringstream bname;
+    bname<<"showerEdep"<<iCrystal;
 
-  //     if (deltaPhi(cluster.phi(), gsftrack.phi()) > deltaPhiMax_[eta_idx])
-  //       continue;
+    std::vector<float> c_edep_crystal(num_electrons, 0.0f);
+    for (size_t iElectron = 0; iElectron < num_electrons; ++iElectron) {
+      c_edep_crystal[iElectron] = c_edep_[iElectron][iCrystal];
+    }
 
-  //     const double track_ediff = std::abs((cluster.energy() - gsftrack.energy()) / cluster.energy());
-  //     if (track_ediff > relativeEnergyDifferenceMax_[eta_idx])
-  //       continue;
-
-  //     if (track_ediff < besttrack_ediff) {
-  //       besttrack_ediff = track_ediff;
-  //       besttrk_idx[iElectron] = i;
-  //     }
-  //   }
-
-  //   if (besttrk_idx[iElectron] >= 0) {
-  //     besttrk_d0s[iElectron] = electron.trkd0()[besttrk_idx[iElectron]];
-  //     besttrk_dzs[iElectron] = electron.trkdz()[besttrk_idx[iElectron]];
-  //     besttrk_pts[iElectron] = electron.trkpt()[besttrk_idx[iElectron]];
-  //     besttrk_etas[iElectron] = electron.trketa()[besttrk_idx[iElectron]];
-  //     besttrk_phis[iElectron] = electron.trkphi()[besttrk_idx[iElectron]];
-  //     if (!electron.trkpMode().empty()) {
-  //       besttrk_pModes[iElectron] = electron.trkpMode()[besttrk_idx[iElectron]];
-  //       besttrk_etaModes[iElectron] = electron.trketaMode()[besttrk_idx[iElectron]];
-  //       besttrk_phiModes[iElectron] = electron.trkphiMode()[besttrk_idx[iElectron]];
-  //       besttrk_qoverpModeErrors[iElectron] = electron.trkqoverpModeError()[besttrk_idx[iElectron]];
-  //     }
-  //     besttrk_chi2overndfs[iElectron] = electron.trkchi2overndf()[besttrk_idx[iElectron]];
-  //     besttrk_charges[iElectron] = electron.trkcharge()[besttrk_idx[iElectron]];
-  //   }
-  // }
-
-  // putValueMap<int>(iEvent, run3ScoutingElectronHandle, besttrk_idx, "Run3ScoutingElectronBestTrackIndex");
-  // putValueMap<float>(iEvent, run3ScoutingElectronHandle, besttrk_d0s, "Run3ScoutingElectronTrackd0");
-  // putValueMap<float>(iEvent, run3ScoutingElectronHandle, besttrk_dzs, "Run3ScoutingElectronTrackdz");
-  // putValueMap<float>(iEvent, run3ScoutingElectronHandle, besttrk_pts, "Run3ScoutingElectronTrackpt");
-  // putValueMap<float>(iEvent, run3ScoutingElectronHandle, besttrk_etas, "Run3ScoutingElectronTracketa");
-  // putValueMap<float>(iEvent, run3ScoutingElectronHandle, besttrk_phis, "Run3ScoutingElectronTrackphi");
-  // putValueMap<float>(iEvent, run3ScoutingElectronHandle, besttrk_pModes, "Run3ScoutingElectronTrackpMode");
-  // putValueMap<float>(iEvent, run3ScoutingElectronHandle, besttrk_etaModes, "Run3ScoutingElectronTracketaMode");
-  // putValueMap<float>(iEvent, run3ScoutingElectronHandle, besttrk_phiModes, "Run3ScoutingElectronTrackphiMode");
-  // putValueMap<float>(
-  //     iEvent, run3ScoutingElectronHandle, besttrk_qoverpModeErrors, "Run3ScoutingElectronTrackqoverpModeError");
-  // putValueMap<float>(iEvent, run3ScoutingElectronHandle, besttrk_chi2overndfs, "Run3ScoutingElectronTrackchi2overndf");
-  // putValueMap<int>(iEvent, run3ScoutingElectronHandle, besttrk_charges, "Run3ScoutingElectronTrackcharge");
+    putValueMap<float>(iEvent, run3ScoutingElectronHandle, c_edep_crystal, bname.str());
+  }
+  
 }
 
 // ------------ method fills 'descriptions' with the allowed parameters for the module  ------------
 void Run3ScoutingEGammaP4RegressVarProducer::fillDescriptions(edm::ConfigurationDescriptions& descriptions) {
   edm::ParameterSetDescription desc;
   desc.add<edm::InputTag>(("Run3ScoutingElectron"), edm::InputTag("hltScoutingEgammaPacker"));
-  desc.add<edm::InputTag>("run3ScoutingElectronBestTrk", edm::InputTag("hltScoutingEgammaPacker", "bestTrackIndex"));
   descriptions.add("Run3ScoutingEGammaP4RegressVarProducer", desc);
 }
 
 // ------------ method template for putting value maps into the event  ------------
 template <typename T>
 void Run3ScoutingEGammaP4RegressVarProducer::putValueMap(edm::Event& iEvent,
-                                                        edm::Handle<Run3ScoutingElectronCollection>& handle,
-                                                        const std::vector<T>& values,
-                                                        const std::string& label) {
+                                                         edm::Handle<Run3ScoutingElectronCollection>& handle,
+                                                         const std::vector<T>& values,
+                                                         const std::string& label) {
   std::unique_ptr<edm::ValueMap<T>> valuemap(new edm::ValueMap<T>());
   typename edm::ValueMap<T>::Filler filler(*valuemap);
   filler.insert(handle, values.begin(), values.end());

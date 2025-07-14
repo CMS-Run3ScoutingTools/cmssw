@@ -32,6 +32,8 @@ scoutingElectronTableTask = cms.Task(scoutingElectronTable)
      scoutingElectronTableTask, cms.Task(scoutingElectronBestTrack, scoutingElectronTable)
 )
 
+scoutingElectronRegressVarTableTask = cms.Task(scoutingElectronRegressVarTable)
+
 # other collections are directly from original Run3Scouting objects, so unnessary to define tasks
 
 ############################
@@ -99,14 +101,16 @@ def prepareScoutingNanoTaskCommon():
     scoutingNanoTaskCommon = cms.Task()
     scoutingNanoTaskCommon.add(scoutingMuonTableTask, scoutingMuonDisplacedVertexTableTask)
     scoutingNanoTaskCommon.add(scoutingElectronTableTask)
+    scoutingNanoTaskCommon.add(scoutingElectronRegressVarTableTask)
     scoutingNanoTaskCommon.add(scoutingPhotonTable)
     scoutingNanoTaskCommon.add(scoutingPrimaryVertexTable)
-    scoutingNanoTaskCommon.add(scoutingPFJetTable)
-    scoutingNanoTaskCommon.add(scoutingMETTable, scoutingRhoTable)
+    # scoutingNanoTaskCommon.add(scoutingPFJetTable)
+    # scoutingNanoTaskCommon.add(scoutingMETTable, scoutingRhoTable)
+    scoutingNanoTaskCommon.add(scoutingRhoTable)
     
     # Scouting derived objects
-    scoutingNanoTaskCommon.add(scoutingPFJetReclusterTask)
-    scoutingNanoTaskCommon.add(scoutingFatPFJetReclusterTask)
+    # scoutingNanoTaskCommon.add(scoutingPFJetReclusterTask)
+    # scoutingNanoTaskCommon.add(scoutingFatPFJetReclusterTask)
 
     return scoutingNanoTaskCommon
 
@@ -119,8 +123,8 @@ def prepareScoutingTriggerTask():
 # additional tasks for running on MC
 def prepareScoutingNanoTaskMC():
     scoutingNanoTaskMC = cms.Task()
-    scoutingNanoTaskMC.add(scoutingPFJetReclusterMatchGenExtensionTask)
-    scoutingNanoTaskMC.add(scoutingFatPFJetReclusterMatchGenExtensionTask)
+    # scoutingNanoTaskMC.add(scoutingPFJetReclusterMatchGenExtensionTask)
+    # scoutingNanoTaskMC.add(scoutingFatPFJetReclusterMatchGenExtensionTask)
 
     scoutingNanoTaskMC.add(puTable)
     return scoutingNanoTaskMC
