@@ -3,12 +3,15 @@
 
 <use name="FWCore/Framework"/>
 <use name="FWCore/ParameterSet"/>
-<use name="FWCore/PluginManager"/>
+<use name="FWCore/Utilities"/>
+<use name="FWCore/ServiceRegistry"/>
 
+<use name="DataFormats/Common"/>
 <use name="DataFormats/Math"/>
 <use name="DataFormats/Scouting"/>
 
 <use name="PhysicsTools/PatAlgos"/>
+<use name="PhysicsTools/Scouting"/>
 
 <library file="*.cc" name="PhysicsToolsScoutingPlugins" >
   <flags EDM_PLUGIN="1"/>

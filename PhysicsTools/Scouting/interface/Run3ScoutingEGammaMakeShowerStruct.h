@@ -1,3 +1,17 @@
+// -*- C++ -*-
+//
+// Package:    PhysicsTools/Scouting
+// Class:      Run3ScoutingEGammaMakeShowerStruct
+//
+/**
+ Description: Create shower shape variables for Run3 scouting EG regression
+*/
+//
+// Original Author:  Abanti Ranadhir Sahasransu
+//         Created:  Fri, 07 July 2025 07:07:25 GMT
+//
+//
+
 #ifndef RUN3SCOUTINGEGAMMAMAKESHOWERSTRUCT_H
 #define RUN3SCOUTINGEGAMMAMAKESHOWERSTRUCT_H
 
@@ -10,7 +24,6 @@
 #include <unordered_map>
 #include <vector>
 #include <tuple>
-
 
 class Run3ScoutingEGammaMakeShowerStruct {
 public:
@@ -61,15 +74,14 @@ public:
   static constexpr unsigned int ecal2dwindow_idxoffset = 2;
   static constexpr unsigned int ecal2dwindow = (2 * (ecal2dwindow_idxoffset) + 1) * (2 * (ecal2dwindow_idxoffset) + 1);
 
-  ShowerStruct makeShowerStruct(const uint32_t,
-                                const std::vector<uint32_t>&,
-                                const std::vector<float>&,
-                                std::array<float, ecal2dwindow>&);
+  static ShowerStruct makeShowerStruct(const uint32_t,
+                                       const std::vector<uint32_t>&,
+                                       const std::vector<float>&,
+                                       std::array<float, ecal2dwindow>&);
 
-  std::tuple<int, int> getiEtaiPhiFromSeedId(uint32_t, int&);
-  DetId getOffsetId(const DetId&, int, int);
-  float getHitEnergy(const DetId&, const std::unordered_map<int, float>&);
-
+  static std::tuple<int, int> getiEtaiPhiFromSeedId(uint32_t, int&);
+  static DetId getOffsetId(const DetId&, int, int);
+  static float getHitEnergy(const DetId&, const std::unordered_map<int, float>&);
 };
 
 #endif
