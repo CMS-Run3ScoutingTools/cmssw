@@ -28,6 +28,7 @@
 #include "DataFormats/Math/interface/LorentzVector.h"
 #include "DataFormats/Math/interface/deltaR.h"
 #include "DataFormats/Scouting/interface/Run3ScoutingElectron.h"
+#include "DataFormats/Scouting/interface/Run3ScoutingVertex.h"
 
 #include "PhysicsTools/Scouting/interface/Run3ScoutingEGammaMakeShowerStruct.h"
 
@@ -45,6 +46,7 @@ private:
   void beginJob() override;
   void analyze(const edm::Event&, const edm::EventSetup&) override;
 
+  edm::EDGetTokenT<std::vector<Run3ScoutingVertex>> pvToken_;
   edm::EDGetTokenT<std::vector<Run3ScoutingElectron>> electronToken_;
   edm::EDGetTokenT<edm::ValueMap<int>> run3SctEle_bestTrkToken_;
   edm::EDGetTokenT<std::vector<reco::GenParticle>> genParticleToken_;
@@ -56,6 +58,8 @@ private:
   float gen_pt_, gen_eta_, gen_phi_;
 
   // Variables for branches
+  int npv_;
+
   float pt_, eta_, phi_, rawe_, pse_, ecorrerror_, sieie_, hoe_, eiso_, hiso_, r9_, smin_, smaj_;
   float detain_, dphiin_, ooemoop_, tiso_, fbrem_;
   int ieta_, iphi_, iseb_;
@@ -75,7 +79,8 @@ private:
 };
 
 Run3ScoutingEGammaP4RegressTrainNtupliser::Run3ScoutingEGammaP4RegressTrainNtupliser(const edm::ParameterSet& iConfig)
-    : electronToken_(consumes<std::vector<Run3ScoutingElectron>>(iConfig.getParameter<edm::InputTag>("electrons"))),
+    : pvToken_(consumes<std::vector<Run3ScoutingVertex>>(iConfig.getParameter<edm::InputTag>("pvs"))),
+      electronToken_(consumes<std::vector<Run3ScoutingElectron>>(iConfig.getParameter<edm::InputTag>("electrons"))),
       run3SctEle_bestTrkToken_(
           consumes<edm::ValueMap<int>>(iConfig.getParameter<edm::InputTag>("run3ScoutingElectronBestTrk"))),
       isMC_(iConfig.getParameter<bool>("isMC")) {
@@ -98,6 +103,8 @@ void Run3ScoutingEGammaP4RegressTrainNtupliser::beginJob() {
     tree_->Branch("gen_eta", &gen_eta_, "gen_eta/F");
     tree_->Branch("gen_phi", &gen_phi_, "gen_phi/F");
   }
+
+  tree_->Branch("npv", &npv_, "npv/I");
 
   tree_->Branch("pt", &pt_, "pt/F");
   tree_->Branch("eta", &eta_, "eta/F");
@@ -137,7 +144,7 @@ void Run3ScoutingEGammaP4RegressTrainNtupliser::beginJob() {
   tree_->Branch("e2x5T", &e2x5T_, "e2x5T/F");
   tree_->Branch("e2x5B", &e2x5B_, "e2x5B/F");
 
-  tree_->Branch("c_edep", c_edep_.data(), "c_edep[25]/F");
+  tree_->Branch("c_edep", c_edep_.data(), "c_edep[49]/F");
 
   tree_->Branch("foundGoodTrack", &foundGoodTrack_, "foundGoodTrack/I");
   tree_->Branch("trkpt", &trkpt_, "trkpt/F");
@@ -166,17 +173,25 @@ void Run3ScoutingEGammaP4RegressTrainNtupliser::beginJob() {
 }
 
 void Run3ScoutingEGammaP4RegressTrainNtupliser::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) {
+  edm::Handle<std::vector<Run3ScoutingVertex>> pvs;
+  iEvent.getByToken(pvToken_, pvs);
+
   edm::Handle<std::vector<Run3ScoutingElectron>> electrons;
   iEvent.getByToken(electronToken_, electrons);
 
   edm::Handle<edm::ValueMap<int>> run3SctEle_bestTrks;
   iEvent.getByToken(run3SctEle_bestTrkToken_, run3SctEle_bestTrks);
 
+  // if (!pvs.isValid())
+  //   throw cms::Exception("Invalid Product for Run3 Scouting Primary Vertices");
+
   if (!electrons.isValid())
     throw cms::Exception("Invalid Product for Run3 Scouting Electrons");
 
   if (!run3SctEle_bestTrks.isValid())
     throw cms::Exception("Found Invalid Value Map for Run3 Scouting Electron Best Track Indices");
+
+  npv_ = pvs->size();
 
   for (size_t i = 0; i < electrons->size(); ++i) {
     const auto& ele = (*electrons)[i];

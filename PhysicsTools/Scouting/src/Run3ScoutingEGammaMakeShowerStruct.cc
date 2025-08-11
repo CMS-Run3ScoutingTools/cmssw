@@ -68,8 +68,8 @@ Run3ScoutingEGammaMakeShowerStruct::ShowerStruct Run3ScoutingEGammaMakeShowerStr
     detIdToEnergy[detIds[index]] = eneM[index];
   }
   constexpr int arrayOffset = ecal2dwindow_idxoffset;
-  std::array<float, 5> iEtaOrIXStrips;
-  std::array<float, 5> iPhiOrIYStrips;
+  std::array<float, ecal2dwindow> iEtaOrIXStrips;
+  std::array<float, ecal2dwindow> iPhiOrIYStrips;
   iEtaOrIXStrips.fill(0.f);
   iPhiOrIYStrips.fill(0.f);
   for (int iEtaOrIXNr = -arrayOffset; iEtaOrIXNr <= arrayOffset; iEtaOrIXNr++) {

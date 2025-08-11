@@ -71,7 +71,7 @@ public:
           e2x5B(e2x5B_v) {}
   };
 
-  static constexpr unsigned int ecal2dwindow_idxoffset = 2;
+  static constexpr unsigned int ecal2dwindow_idxoffset = 3;
   static constexpr unsigned int ecal2dwindow = (2 * (ecal2dwindow_idxoffset) + 1) * (2 * (ecal2dwindow_idxoffset) + 1);
 
   static ShowerStruct makeShowerStruct(const uint32_t,
